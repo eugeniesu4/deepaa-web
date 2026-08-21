@@ -12,6 +12,25 @@ body{padding-top:70px}.progress-bar{-webkit-transition:none!important;transition
 #patch-guide{position:absolute;background-color:transparent;padding:4px}[v-cloak]{display:none}
 #boot-error{display:none;white-space:pre-wrap}
 </style>
+<script>
+(async function(){
+  try {
+    if(!('serviceWorker' in navigator)) throw new Error('Service Worker is not supported by this browser.');
+    const reg=await navigator.serviceWorker.register('./sw.js',{scope:'./'});
+    await navigator.serviceWorker.ready;
+    if(!navigator.serviceWorker.controller){ location.reload(); return; }
+    const r=await fetch('https://raw.githubusercontent.com/n317/DeepAAonWeb/master/docs/app.bundle.js',{cache:'no-store'});
+    if(!r.ok) throw new Error('Could not load DeepAA engine: HTTP '+r.status);
+    const code=await r.text();
+    const script=document.createElement('script');
+    script.text=code;
+    document.head.appendChild(script);
+  }catch(e){
+    const el=document.getElementById('boot-error');
+    if(el){el.style.display='block';el.textContent='DeepAA failed to start:\n'+(e&&e.stack||e);}
+  }
+})();
+</script>
 </head>
 <body>
 <div id="boot-error" class="alert alert-danger container"></div>
@@ -20,30 +39,11 @@ body{padding-top:70px}.progress-bar{-webkit-transition:none!important;transition
 <div class="col-xs-12 col-sm-12 col-md-12 col-lg-6">
 <div class="alert alert-info"><p>・Google Chromeを推奨します。画像を選択、加工後、Startボタンで実行してください。</p><p>・選択された画像はブラウザ内で処理され、外部サーバーへアップロードされません。</p><p>・入力画像はノイズを除去した細い線画をおすすめします。</p></div>
 <div class="col-xs-6 col-md-6"><div class="panel panel-default"><div class="panel-heading" v-cloak>Original Image {{ inputImage.width }} x {{ inputImage.height }}</div><div class="panel-body"><form class="form-inline"><div class="form-group"><input type="file" @change="onFileChange"></div></form><img id="img-input" class="img-thumbnail" :src="inputImage.URL" @load="onLoadInputImage"></div></div></div>
-<div class="col-xs-6 col-md-6"><div class="panel panel-default"><div class="panel-heading" v-cloak>Input Image {{ grayscaleImage.width }} x {{ grayscaleImage.height }}</div><div class="panel-body"><form class="form-inline" onsubmit="return false;"><div class="form-group"><label for="outputAASize">Output Width:</label><input v-model="outputAA.width" type="text" class="form-control" id="outputAASize" maxlength="4"><button type="button" class="btn btn-default" @click="onClickInputImageWidth">update</button></div></form><img id="img-grayscale" class="img-thumbnail" :src="grayscaleImage.URL"></div></div></div>
+<div class="col-xs-6 col-md-6"><div class="panel panel-default"><div class="panel-heading" v-cloak>Input Image {{ grayscaleImage.width }} x {{ grayscaleImage.height }}</div><div class="panel-body"><form class="form-inline" onsubmit="return false;"><div class="form-group"><label for="outputAASize">Output Width:</label><input v-model="outputAA.width" type="text" class="form-control" id="outputAASize" maxlength="4"><button class="btn btn-default" @click="onClickInputImageWidth">update</button></div></form><img id="img-grayscale" class="img-thumbnail" :src="grayscaleImage.URL"></div></div></div>
 </div>
-<div class="col-xs-12 col-sm-12 col-md-12 col-lg-6"><div class="panel panel-default"><div class="panel-heading">Output AA</div><div class="panel-body"><div class="row"><div class="col-xs-1 col-md-1"><button type="button" class="btn btn-primary" @click="onClickConvertAAStart">Start</button></div><div class="col-xs-2 col-md-2"><p class="text-center" style="margin-left:10px" v-cloak>{{ '[' + outputAA.currentLineNum + ' / ' + outputAA.maxLineNum + '][' + outputAA.linePercentage + '%]' }}</p></div><div class="col-xs-9 col-md-9"><div class="progress"><div class="progress-bar" v-bind:style="{width:outputAA.totalPercentage+'%'}" v-cloak>{{ progressMessage }}</div></div></div></div><div class="row"><div class="checkbox" style="margin-left:20px"><label><input type="checkbox" v-model="highSpeedMode"> 高速モード(高負荷)</label></div></div><div class="row"><div class="col-xs-12 col-sm-12 col-md-10"><div class="panel panel-default"><div class="panel-heading">Line Image</div><div class="panel-body" style="height:104px"><div style="position:relative"><canvas class="img-thumbnail" ref="lineImageCanvas" style="position:absolute" :width="previewLineImage.width" height="64"></canvas><canvas ref="lineImagePatchGuideCanvas" id="patch-guide" v-bind:style="{left:previewLineImage.patchGuidePosX}" width="64" height="64"></canvas></div></div></div></div><div class="col-xs-12 col-sm-12 col-md-2"><div class="panel panel-default"><div class="panel-heading">Patch Image</div><div class="panel-body"><canvas class="img-thumbnail" width="64" height="64" ref="patchImageCanvas"></canvas></div></div></div></div><button type="button" class="btn btn-default" :data-clipboard-text="resultAA.text">Copy to clipboard</button><textarea id="result_aa" class="form-control aa" :rows="resultAA.rows" v-model="resultAA.text"></textarea></div></div></div>
+<div class="col-xs-12 col-sm-12 col-md-12 col-lg-6"><div class="panel panel-default"><div class="panel-heading">Output AA</div><div class="panel-body"><div class="row"><div class="col-xs-1 col-md-1"><button class="btn btn-primary" @click="onClickConvertAAStart">Start</button></div><div class="col-xs-2 col-md-2"><p class="text-center" style="margin-left:10px" v-cloak>{{ '[' + outputAA.currentLineNum + ' / ' + outputAA.maxLineNum + '][' + outputAA.linePercentage + '%]' }}</p></div><div class="col-xs-9 col-md-9"><div class="progress"><div class="progress-bar" v-bind:style="{width:outputAA.totalPercentage+'%'}" v-cloak>{{ progressMessage }}</div></div></div></div><div class="row"><div class="checkbox" style="margin-left:20px"><label><input type="checkbox" v-model="highSpeedMode"> 高速モード(高負荷)</label></div></div><div class="row"><div class="col-xs-12 col-sm-12 col-md-10"><div class="panel panel-default"><div class="panel-heading">Line Image</div><div class="panel-body" style="height:104px"><div style="position:relative"><canvas class="img-thumbnail" ref="lineImageCanvas" style="position:absolute" :width="previewLineImage.width" height="64"></canvas><canvas ref="lineImagePatchGuideCanvas" id="patch-guide" v-bind:style="{left:previewLineImage.patchGuidePosX}" width="64" height="64"></canvas></div></div></div></div><div class="col-xs-12 col-sm-12 col-md-2"><div class="panel panel-default"><div class="panel-heading">Patch Image</div><div class="panel-body"><canvas class="img-thumbnail" width="64" height="64" ref="patchImageCanvas"></canvas></div></div></div></div><button class="btn btn-default" :data-clipboard-text="resultAA.text">Copy to clipboard</button><textarea id="result_aa" class="form-control aa" :rows="resultAA.rows" v-model="resultAA.text"></textarea></div></div></div>
 </div>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-<script>
-window.addEventListener('DOMContentLoaded', async function(){
-  try {
-    if(!('serviceWorker' in navigator)) throw new Error('Service Worker is not supported by this browser.');
-    await navigator.serviceWorker.register('./sw.js',{scope:'./'});
-    await navigator.serviceWorker.ready;
-    const r=await fetch('https://raw.githubusercontent.com/n317/DeepAAonWeb/master/docs/app.bundle.js',{cache:'no-store'});
-    if(!r.ok) throw new Error('Could not load DeepAA engine: HTTP '+r.status);
-    const code=await r.text();
-    const script=document.createElement('script');
-    script.text=code;
-    document.body.appendChild(script);
-  }catch(e){
-    const el=document.getElementById('boot-error');
-    if(el){el.style.display='block';el.textContent='DeepAA failed to start:\n'+(e&&e.stack||e);}
-    console.error(e);
-  }
-});
-</script>
 </body>
 </html>
