@@ -1,20 +1,37 @@
-<head><script defer src="app.bundle.js?v=2.3"></script></head><!-- Global site tag (gtag.js) - Google Analytics -->
+<head>
+<script>
+(async function () {
+  try {
+    var key = 'deepaa-sw-reset-v23';
+    if (!sessionStorage.getItem(key) && 'serviceWorker' in navigator) {
+      var regs = await navigator.serviceWorker.getRegistrations();
+      var hadController = !!navigator.serviceWorker.controller;
+      await Promise.all(regs.map(function (r) { return r.unregister(); }));
+      if ('caches' in window) {
+        var keys = await caches.keys();
+        await Promise.all(keys.map(function (k) { return caches.delete(k); }));
+      }
+      sessionStorage.setItem(key, '1');
+      if (hadController) {
+        location.reload();
+        return;
+      }
+    }
+  } catch (e) {}
+})();
+</script>
+<script defer src="app.bundle.js?v=2.3"></script>
+</head><!-- Global site tag (gtag.js) - Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=UA-107592931-2"></script>
 <script>
     window.dataLayer = window.dataLayer || [];
 
-    function gtag() {
-        dataLayer.push(arguments);
-    }
-
     gtag('js', new Date());
-
     gtag('config', 'UA-107592931-2');
 </script>
 <title>DeepAA on Web</title>
 <meta http-equiv="content-type" content="text/html;charset=utf-8">
 
-<!-- Latest compiled and minified CSS -->
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
       integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHR32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 
@@ -27,13 +44,7 @@
         font-weight: normal;
         font-style: normal;
     }
-
-    .aa {
-        font-family: 'ＭＳ Ｐゴシック', 'MS PGothic', 'Saitamaar', 'IPAMonaPGothic', serif !important;
-        line-height: 18px;
-        font-size: 16px;
-    }
-
+    .aa { font-family: 'ＭＳ Ｐゴシック', 'MS PGothic', 'Saitamaar', 'IPAMonaPGothic', serif !important; line-height: 18px; font-size: 16px; }
     body { padding-top: 70px; }
     .progress-bar { -webkit-transition: none !important; transition: none !important; }
     #patch-guide { position: absolute; background-color: transparent; padding: 4px; }
@@ -74,6 +85,7 @@
         </div>
         <div class="col-xs-6 col-md-6">
             <div class="panel panel-default">
+                <div class="panel panel-default">
                 <div class="panel-heading" v-cloak>Input Image {{ grayscaleImage.width }} x {{ grayscaleImage.height }}</div>
                 <div class="panel-body">
                     <form class="form-inline" onsubmit="return false;"><div class="form-group">
@@ -107,4 +119,4 @@
     </div>
 </div>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPpN9GmGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
