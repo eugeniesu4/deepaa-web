@@ -16,11 +16,10 @@ jobs:
           set -e
           git clone --depth 1 https://github.com/n317/DeepAAonWeb.git /tmp/deepaa
           cp -a /tmp/deepaa/docs/. .
-          if grep -q 'DeepAA on Web : Version 2.2' index.html; then
-            sed -i 's/DeepAA on Web : Version 2.2/DeepAA on Web : Version 2.3/g' index.html
-          fi
+          sed -i 's/DeepAA on Web : Version 2.2/DeepAA on Web : Version 2.3/g' index.html
+          sed -i 's#<title>{{ title }}</title>#<title>DeepAA on Web</title>#g' index.html
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
-          git commit -m 'Sync original DeepAA Web v2.3' || true
+          git commit -m 'Restore original DeepAA Web v2.3 and fix title' || true
           git push
