@@ -1,0 +1,26 @@
+name: Sync original DeepAA v2.3
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Replace site with original DeepAA Web docs
+        shell: bash
+        run: |
+          set -e
+          git clone --depth 1 https://github.com/n317/DeepAAonWeb.git /tmp/deepaa
+          cp -a /tmp/deepaa/docs/. .
+          if grep -q 'DeepAA on Web : Version 2.2' index.html; then
+            sed -i 's/DeepAA on Web : Version 2.2/DeepAA on Web : Version 2.3/g' index.html
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Sync original DeepAA Web v2.3' || true
+          git push
