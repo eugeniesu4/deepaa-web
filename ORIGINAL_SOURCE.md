@@ -1,0 +1,2 @@
+Upstream reference: https://github.com/n317/DeepAAonWeb/tree/master/docs
+This project is intended to reproduce that implementation exactly, including its app.bundle.js, model assets, preprocessing and character mapping.
