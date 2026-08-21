@@ -12,25 +12,6 @@ body{padding-top:70px}.progress-bar{-webkit-transition:none!important;transition
 #patch-guide{position:absolute;background-color:transparent;padding:4px}[v-cloak]{display:none}
 #boot-error{display:none;white-space:pre-wrap}
 </style>
-<script>
-(async function(){
-  try {
-    if(!('serviceWorker' in navigator)) throw new Error('Service Worker is not supported by this browser.');
-    const reg=await navigator.serviceWorker.register('./sw.js',{scope:'./'});
-    await navigator.serviceWorker.ready;
-    if(!navigator.serviceWorker.controller){ location.reload(); return; }
-    const r=await fetch('https://raw.githubusercontent.com/n317/DeepAAonWeb/master/docs/app.bundle.js',{cache:'no-store'});
-    if(!r.ok) throw new Error('Could not load DeepAA engine: HTTP '+r.status);
-    const code=await r.text();
-    const script=document.createElement('script');
-    script.text=code;
-    document.head.appendChild(script);
-  }catch(e){
-    const el=document.getElementById('boot-error');
-    if(el){el.style.display='block';el.textContent='DeepAA failed to start:\n'+(e&&e.stack||e);}
-  }
-})();
-</script>
 </head>
 <body>
 <div id="boot-error" class="alert alert-danger container"></div>
@@ -45,5 +26,24 @@ body{padding-top:70px}.progress-bar{-webkit-transition:none!important;transition
 </div>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script>
+window.addEventListener('DOMContentLoaded', async function(){
+  try {
+    if(!('serviceWorker' in navigator)) throw new Error('Service Worker is not supported by this browser.');
+    await navigator.serviceWorker.register('./sw.js',{scope:'./'});
+    await navigator.serviceWorker.ready;
+    const r=await fetch('https://raw.githubusercontent.com/n317/DeepAAonWeb/master/docs/app.bundle.js',{cache:'no-store'});
+    if(!r.ok) throw new Error('Could not load DeepAA engine: HTTP '+r.status);
+    const code=await r.text();
+    const script=document.createElement('script');
+    script.text=code;
+    document.body.appendChild(script);
+  }catch(e){
+    const el=document.getElementById('boot-error');
+    if(el){el.style.display='block';el.textContent='DeepAA failed to start:\n'+(e&&e.stack||e);}
+    console.error(e);
+  }
+});
+</script>
 </body>
 </html>
