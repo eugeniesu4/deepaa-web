@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DeepAA — Dense / Shading</title>
+<style>
+:root{--bg:#f4f4f1;--panel:#fff;--text:#111;--muted:#666;--border:#d8d8d2}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif}.wrap{max-width:1400px;margin:0 auto;padding:28px}.top{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-bottom:20px}.brand{font-size:24px;font-weight:700}.sub{font-size:13px;color:var(--muted);margin-top:4px}.back{color:#111;text-decoration:none;border:1px solid var(--border);padding:9px 13px;background:#fff}.grid{display:grid;grid-template-columns:360px 1fr;gap:18px}.panel{background:var(--panel);border:1px solid var(--border);padding:18px}.controls{display:grid;gap:14px}.control label{display:block;font-size:12px;font-weight:700;margin-bottom:6px}.row{display:flex;gap:8px}.row>*{flex:1}input[type=number],select,input[type=text]{width:100%;padding:9px;border:1px solid var(--border);background:#fff}input[type=file]{width:100%}.modes{display:grid;grid-template-columns:1fr 1fr;gap:8px}.mode{padding:11px;border:1px solid var(--border);background:#fff;cursor:pointer}.mode.active{background:#111;color:#fff;border-color:#111}.check{font-size:13px}.btn{border:1px solid #111;background:#111;color:#fff;padding:10px 14px;cursor:pointer}.btn.secondary{background:#fff;color:#111;border-color:var(--border)}.actions{display:flex;gap:8px}.preview{min-height:600px;overflow:auto;background:#fff;border:1px solid var(--border);padding:20px}.preview pre{font-family:"Courier New",monospace;font-size:12px;line-height:1;letter-spacing:0;margin:0;white-space:pre}.hint{font-size:12px;color:var(--muted);line-height:1.5}.status{font-size:12px;color:var(--muted)}@media(max-width:900px){.grid{grid-template-columns:1fr}.preview{min-height:400px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top"><div><div class="brand">DeepAA — Dense / Shading</div><div class="sub">A separate lightweight ASCII renderer. Your existing DeepAA site is unchanged.</div></div><a class="back" href="../">Open original DeepAA</a></header>
+<div class="grid">
+<section class="panel"><div class="controls">
+<div class="control"><label>IMAGE</label><input id="file" type="file" accept="image/*"></div>
+<div class="control"><label>MODE</label><div class="modes"><button id="denseBtn" class="mode active" type="button">Dense</button><button id="shadeBtn" class="mode" type="button">Shading</button></div></div>
+<div class="control"><label>OUTPUT WIDTH</label><input id="width" type="number" min="20" max="500" value="120"></div>
+<div class="control"><label>CHARACTER SET</label><select id="charset"><option value="custom">Custom</option><option value="blocks">Blocks</option><option value="classic">Classic</option><option value="minimal">Minimal</option></select></div>
+<div class="control"><label>CUSTOM CHARACTERS</label><input id="custom" type="text" value="@#8&o:*. "></div>
+<div class="row"><div class="control"><label>CONTRAST</label><input id="contrast" type="number" min="-100" max="100" value="0"></div><div class="control"><label>BRIGHTNESS</label><input id="brightness" type="number" min="-100" max="100" value="0"></div></div>
+<div class="check"><label><input id="invert" type="checkbox"> Invert</label></div>
+<div class="actions"><button id="render" class="btn" type="button">Generate</button><button id="copy" class="btn secondary" type="button">Copy</button></div>
+<div id="status" class="status">Choose an image to begin.</div>
+<div class="hint">Dense uses a heavier character ramp for strong silhouettes. Shading uses a wider tonal ramp to preserve light-to-dark gradients. Processing is local in your browser.</div>
+</div></section>
+<section class="panel"><div class="preview"><pre id="output"></pre></div></section>
+</div></div>
+<script src="app.js"></script>
+</body>
+</html>
