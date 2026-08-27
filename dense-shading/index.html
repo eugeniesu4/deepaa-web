@@ -1,31 +1,77 @@
 <!doctype html>
 <html lang="en">
 <head>
+<base href="../">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>DeepAA — Dense / Shading</title>
+<title>DeepAA on Web — Dense / Shading</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css">
 <style>
-:root{--bg:#f4f4f1;--panel:#fff;--text:#111;--muted:#666;--border:#d8d8d2}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif}.wrap{max-width:1400px;margin:0 auto;padding:28px}.top{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-bottom:20px}.brand{font-size:24px;font-weight:700}.sub{font-size:13px;color:var(--muted);margin-top:4px}.back{color:#111;text-decoration:none;border:1px solid var(--border);padding:9px 13px;background:#fff}.grid{display:grid;grid-template-columns:360px 1fr;gap:18px}.panel{background:var(--panel);border:1px solid var(--border);padding:18px}.controls{display:grid;gap:14px}.control label{display:block;font-size:12px;font-weight:700;margin-bottom:6px}.row{display:flex;gap:8px}.row>*{flex:1}input[type=number],select,input[type=text]{width:100%;padding:9px;border:1px solid var(--border);background:#fff}input[type=file]{width:100%}.modes{display:grid;grid-template-columns:1fr 1fr;gap:8px}.mode{padding:11px;border:1px solid var(--border);background:#fff;cursor:pointer}.mode.active{background:#111;color:#fff;border-color:#111}.check{font-size:13px}.btn{border:1px solid #111;background:#111;color:#fff;padding:10px 14px;cursor:pointer}.btn.secondary{background:#fff;color:#111;border-color:var(--border)}.actions{display:flex;gap:8px}.preview{min-height:600px;overflow:auto;background:#fff;border:1px solid var(--border);padding:20px}.preview pre{font-family:"Courier New",monospace;font-size:12px;line-height:1;letter-spacing:0;margin:0;white-space:pre}.hint{font-size:12px;color:var(--muted);line-height:1.5}.status{font-size:12px;color:var(--muted)}@media(max-width:900px){.grid{grid-template-columns:1fr}.preview{min-height:400px}}
+@font-face{font-family:'Saitamaar';src:url('fonts/Saitamaar.woff2') format('woff2'),url('fonts/Saitamaar.eot') format('eot'),url('fonts/Saitamaar.ttf') format('truetype');font-weight:normal;font-style:normal}
+.aa{font-family:'ＭＳ Ｐゴシック','MS PGothic','Saitamaar','IPAMonaPGothic',serif!important;line-height:18px;font-size:16px}body{padding-top:70px}.progress-bar{-webkit-transition:none!important;transition:none!important}#patch-guide{position:absolute;background-color:transparent;padding:4px}[v-cloak]{display:none}
+.modebar{padding:10px 15px;background:#f5f5f5;border-bottom:1px solid #ddd}.modebar .btn{margin-right:6px}.modebar .active{font-weight:bold;box-shadow:inset 0 2px 5px rgba(0,0,0,.12)}
+.mode-note{display:inline-block;margin-left:8px;color:#777;font-size:12px}
 </style>
 </head>
 <body>
-<div class="wrap">
-<header class="top"><div><div class="brand">DeepAA — Dense / Shading</div><div class="sub">A separate lightweight ASCII renderer. Your existing DeepAA site is unchanged.</div></div><a class="back" href="../">Open original DeepAA</a></header>
-<div class="grid">
-<section class="panel"><div class="controls">
-<div class="control"><label>IMAGE</label><input id="file" type="file" accept="image/*"></div>
-<div class="control"><label>MODE</label><div class="modes"><button id="denseBtn" class="mode active" type="button">Dense</button><button id="shadeBtn" class="mode" type="button">Shading</button></div></div>
-<div class="control"><label>OUTPUT WIDTH</label><input id="width" type="number" min="20" max="500" value="120"></div>
-<div class="control"><label>CHARACTER SET</label><select id="charset"><option value="custom">Custom</option><option value="blocks">Blocks</option><option value="classic">Classic</option><option value="minimal">Minimal</option></select></div>
-<div class="control"><label>CUSTOM CHARACTERS</label><input id="custom" type="text" value="@#8&o:*. "></div>
-<div class="row"><div class="control"><label>CONTRAST</label><input id="contrast" type="number" min="-100" max="100" value="0"></div><div class="control"><label>BRIGHTNESS</label><input id="brightness" type="number" min="-100" max="100" value="0"></div></div>
-<div class="check"><label><input id="invert" type="checkbox"> Invert</label></div>
-<div class="actions"><button id="render" class="btn" type="button">Generate</button><button id="copy" class="btn secondary" type="button">Copy</button></div>
-<div id="status" class="status">Choose an image to begin.</div>
-<div class="hint">Dense uses a heavier character ramp for strong silhouettes. Shading uses a wider tonal ramp to preserve light-to-dark gradients. Processing is local in your browser.</div>
-</div></section>
-<section class="panel"><div class="preview"><pre id="output"></pre></div></section>
-</div></div>
-<script src="app.js"></script>
-</body>
-</html>
+<div id="app" class="container-fluid">
+<nav class="navbar navbar-default navbar-fixed-top"><div class="container-fluid"><div class="navbar-header"><a class="navbar-brand" href="#">DeepAA on Web : Dense / Shading</a><div class="navbar-text" v-if="modelLoading" v-cloak>Model Loading...{{ modelLoadingProgress }}%</div><div class="navbar-text" v-else-if="modelInitializing" v-cloak>Model Initializing...{{ modelInitProgress }}%</div></div><ul class="nav navbar-nav navbar-right"><li><a href="../" target="_self">Original DeepAA</a></li><li><a href="https://github.com/OsciiArt/DeepAA" target="_new">DeepAA (GitHub)</a></li></ul></div></nav>
+<div class="modebar"><strong>Rendering mode:</strong> <button id="modeDense" type="button" class="btn btn-default active">Dense</button><button id="modeShading" type="button" class="btn btn-default">Shading</button><span id="modeNote" class="mode-note">DeepAA CNN output + dense character treatment</span></div>
+<div class="col-xs-12 col-sm-12 col-md-12 col-lg-6">
+<div class="alert alert-info" role="alert"><p>・This page uses the same DeepAA CNN engine as the original page.</p><p>・Your image is processed locally in the browser.</p><p>・For best results, use a clean grayscale line image.</p></div>
+<div class="col-xs-6 col-md-6"><div class="panel panel-default"><div class="panel-heading" v-cloak>Original Image {{ inputImage.width }} x {{ inputImage.height }}</div><div class="panel-body"><form class="form-inline"><div class="form-group"><input type="file" @change="onFileChange"></div></form><img id="img-input" class="img-thumbnail" :src="inputImage.URL" @load="onLoadInputImage"></div></div></div>
+<div class="col-xs-6 col-md-6"><div class="panel panel-default"><div class="panel-heading" v-cloak>Input Image {{ grayscaleImage.width }} x {{ grayscaleImage.height }}</div><div class="panel-body"><form class="form-inline" onsubmit="return false;"><div class="form-group"><label for="outputAASize">Output Width:</label><input v-model="outputAA.width" type="text" class="form-control" id="outputAASize" placeholder="output width" maxlength="4" pattern="^[0-9]+$" required><button class="btn btn-default" @click="onClickInputImageWidth">update</button></div></form><img id="img-grayscale" class="img-thumbnail" :src="grayscaleImage.URL"></div></div></div>
+</div>
+<div class="col-xs-12 col-sm-12 col-md-12 col-lg-6"><div class="panel panel-default"><div class="panel-heading">Output AA</div><div class="panel-body"><div class="row"><div class="col-xs-1 col-md-1"><button class="btn btn-primary" @click="onClickConvertAAStart">Start</button></div><div class="col-xs-2 col-md-2"><p class="text-center" style="margin-left:10px" v-cloak>{{ '[' + outputAA.currentLineNum + ' / ' + outputAA.maxLineNum + '][' + outputAA.linePercentage + '%]' }}</p></div><div class="col-xs-9 col-md-9"><div class="progress"><div class="progress-bar" v-bind:style="{ width: outputAA.totalPercentage + '%' }" v-cloak>{{ progressMessage }}</div></div></div></div><div class="row"><div class="checkbox" style="margin-left:20px"><label><input type="checkbox" id="highspeedmode" v-model="highSpeedMode"> High speed mode</label></div></div><div class="row"><div class="col-xs-12 col-sm-12 col-md-10"><div class="panel panel-default"><div class="panel-heading">Line Image</div><div class="panel-body" style="height:104px"><div style="position:relative"><canvas class="img-thumbnail" ref="lineImageCanvas" style="position:absolute" :width="previewLineImage.width" height="64"></canvas><canvas ref="lineImagePatchGuideCanvas" id="patch-guide" v-bind:style="{ left: previewLineImage.patchGuidePosX }" width="64" height="64"></canvas></div></div></div></div><div class="col-xs-12 col-sm-12 col-md-2"><div class="panel panel-default"><div class="panel-heading">Patch Image</div><div class="panel-body"><canvas class="img-thumbnail" width="64" height="64" ref="patchImageCanvas"></canvas></div></div></div></div><button class="btn btn-default" :data-clipboard-text="resultAA.text">Copy to clipboard</button><textarea id="result_aa" class="form-control aa" :rows="resultAA.rows" v-model="resultAA.text"></textarea></div></div></div>
+</div>
+<script src="app.bundle.js"></script>
+<script>
+(function(){
+  var mode='dense', lastDeep='';
+  var denseChars='@#8&$%*+=-:. '; var shadeChars='█▓▒▒░░  .';
+  function transform(text){
+    if(!text)return text;
+    var chars=mode==='dense'?denseChars:shadeChars;
+    var lines=text.split('\n');
+    return lines.map(function(line){
+      if(!line)return line;
+      var out='';
+      for(var i=0;i<line.length;i++){
+        var c=line[i];
+        if(c===' '){out+=' ';continue}
+        var p=i/Math.max(1,line.length-1);
+        var idx=Math.min(chars.length-1,Math.floor((c.charCodeAt(0)%chars.length)));
+        if(mode==='shading') idx=Math.min(chars.length-1,Math.floor(((c.charCodeAt(0)-32)/95)*chars.length));
+        out+=chars[Math.max(0,idx)];
+      }
+      return out;
+    }).join('\n');
+  }
+  function hook(){
+    var ta=document.getElementById('result_aa');
+    if(!ta)return setTimeout(hook,300);
+    var originalSet=Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype,'value').set;
+    var observer=new MutationObserver(function(){
+      if(mode==='dense')return;
+    });
+    observer.observe(ta,{childList:true,subtree:true,characterData:true});
+    var apply=function(){
+      var v=ta.value;
+      if(v && v!==lastDeep){lastDeep=v; if(mode!=='deep'){ta.value=transform(v);ta.dispatchEvent(new Event('input',{bubbles:true}));}}
+    };
+    setInterval(apply,500);
+  }
+  function setMode(m){
+    mode=m;
+    document.getElementById('modeDense').classList.toggle('active',m==='dense');
+    document.getElementById('modeShading').classList.toggle('active',m==='shading');
+    document.getElementById('modeNote').textContent=m==='dense'?'DeepAA CNN output + dense character treatment':'DeepAA CNN output + tonal shading character treatment';
+    lastDeep='';
+  }
+  document.getElementById('modeDense').onclick=function(){setMode('dense')};
+  document.getElementById('modeShading').onclick=function(){setMode('shading')};
+  hook();
+})();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js"></script>
+</body></html>
