@@ -16,6 +16,54 @@
 <div class="col-xs-6 col-md-6"><div class="panel panel-default"><div class="panel-heading" v-cloak>Original Image {{ inputImage.width }} x {{ inputImage.height }}</div><div class="panel-body"><form class="form-inline"><div class="form-group"><input type="file" @change="onFileChange"></div></form><img id="img-input" class="img-thumbnail" :src="inputImage.URL" @load="onLoadInputImage"></div></div></div>
 <div class="col-xs-6 col-md-6"><div class="panel panel-default"><div class="panel-heading" v-cloak>Input Image {{ grayscaleImage.width }} x {{ grayscaleImage.height }}</div><div class="panel-body"><form class="form-inline" onsubmit="return false;"><div class="form-group"><label for="outputAASize">Output Width:</label><input v-model="outputAA.width" type="text" class="form-control" id="outputAASize" placeholder="出力横幅" maxlength="4" pattern="^[0-9]+$" required><button class="btn btn-default" @click="onClickInputImageWidth">update</button></div></form><img id="img-grayscale" class="img-thumbnail" :src="grayscaleImage.URL"></div></div></div>
 </div>
-<div class="col-xs-12 col-sm-12 col-md-12 col-lg-6"><div class="panel panel-default"><div class="panel-heading">Output AA</div><div class="panel-body"><div class="row"><div class="col-xs-1 col-md-1"><button class="btn btn-primary" @click="onClickConvertAAStart">Start</button></div><div class="col-xs-2 col-md-2"><p class="text-center" style="margin-left:10px" v-cloak>{{ '[' + outputAA.currentLineNum + ' / ' + outputAA.maxLineNum + '][' + outputAA.linePercentage + '%]' }}</p></div><div class="col-xs-9 col-md-9"><div class="progress"><div class="progress-bar" v-bind:style="{ width: outputAA.totalPercentage + '%' }" v-cloak>{{ progressMessage }}</div></div></div></div><div class="row"><div class="checkbox" style="margin-left:20px"><label><input type="checkbox" id="highspeedmode" v-model="highSpeedMode"> 高速モード(高負荷)</label></div></div><div class="row"><div class="col-xs-12 col-sm-12 col-md-10"><div class="panel panel-default"><div class="panel-heading">Line Image</div><div class="panel-body" style="height:104px"><div style="position:relative"><canvas class="img-thumbnail" ref="lineImageCanvas" style="position:absolute" :width="previewLineImage.width" height="64"></canvas><canvas ref="lineImagePatchGuideCanvas" id="patch-guide" v-bind:style="{ left: previewLineImage.patchGuidePosX }" width="64" height="64"></canvas></div></div></div></div><div class="col-xs-12 col-sm-12 col-md-2"><div class="panel panel-default"><div class="panel-heading">Patch Image</div><div class="panel-body"><canvas class="img-thumbnail" width="64" height="64" ref="patchImageCanvas"></canvas></div></div></div></div><button class="btn btn-default" :data-clipboard-text="resultAA.text">Copy to clipboard</button><textarea id="result_aa" class="form-control aa" :rows="resultAA.rows" v-model="resultAA.text"></textarea></div></div></div>
+<div class="col-xs-12 col-sm-12 col-md-12 col-lg-6"><div class="panel panel-default"><div class="panel-heading">Output AA</div><div class="panel-body"><div class="row"><div class="col-xs-1 col-md-1"><button class="btn btn-primary" @click="onClickConvertAAStart">Start</button></div><div class="col-xs-2 col-md-2"><p class="text-center" style="margin-left:10px" v-cloak>{{ '[' + outputAA.currentLineNum + ' / ' + outputAA.maxLineNum + '][' + outputAA.linePercentage + '%]' }}</p></div><div class="col-xs-9 col-md-9"><div class="progress"><div class="progress-bar" v-bind:style="{ width: outputAA.totalPercentage + '%' }" v-cloak>{{ progressMessage }}</div></div></div></div><div class="row"><div class="checkbox" style="margin-left:20px"><label><input type="checkbox" id="highspeedmode" v-model="highSpeedMode"> 高速モード(高負荷)</label></div></div><div class="row"><div class="col-xs-12 col-sm-12 col-md-10"><div class="panel panel-default"><div class="panel-heading">Line Image</div><div class="panel-body" style="height:104px"><div style="position:relative"><canvas class="img-thumbnail" ref="lineImageCanvas" style="position:absolute" :width="previewLineImage.width" height="64"></canvas><canvas ref="lineImagePatchGuideCanvas" id="patch-guide" v-bind:style="{ left: previewLineImage.patchGuidePosX }" width="64" height="64"></canvas></div></div></div></div><div class="col-xs-12 col-sm-12 col-md-2"><div class="panel panel-default"><div class="panel-heading">Patch Image</div><div class="panel-body"><canvas class="img-thumbnail" width="64" height="64" ref="patchImageCanvas"></canvas></div></div></div></div><button class="btn btn-default" :data-clipboard-text="resultAA.text">Copy to clipboard</button> <button id="output-image-button" type="button" class="btn btn-default">Output Image</button><textarea id="result_aa" class="form-control aa" :rows="resultAA.rows" v-model="resultAA.text"></textarea></div></div></div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js"></script>
+<script>
+(function(){
+  function outputAAImage(){
+    var textarea=document.getElementById('result_aa');
+    if(!textarea || !textarea.value){
+      alert('Please generate the Output AA first.');
+      return;
+    }
+    var text=textarea.value.replace(/\r\n/g,'\n').replace(/\r/g,'\n');
+    var lines=text.split('\n');
+    var style=window.getComputedStyle(textarea);
+    var fontSize=parseFloat(style.fontSize)||16;
+    var lineHeight=parseFloat(style.lineHeight);
+    if(!isFinite(lineHeight)) lineHeight=18;
+    var fontFamily=style.fontFamily||'monospace';
+    var font=style.fontStyle+' '+style.fontWeight+' '+fontSize+'px '+fontFamily;
+    var measure=document.createElement('canvas').getContext('2d');
+    measure.font=font;
+    var maxWidth=1;
+    for(var i=0;i<lines.length;i++) maxWidth=Math.max(maxWidth,measure.measureText(lines[i]).width);
+    var paddingX=16, paddingY=16;
+    var canvas=document.createElement('canvas');
+    canvas.width=Math.ceil(maxWidth+paddingX*2);
+    canvas.height=Math.ceil(lines.length*lineHeight+paddingY*2);
+    var ctx=canvas.getContext('2d');
+    ctx.fillStyle='#ffffff';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.font=font;
+    ctx.fillStyle='#000000';
+    ctx.textBaseline='top';
+    for(var j=0;j<lines.length;j++) ctx.fillText(lines[j],paddingX,paddingY+j*lineHeight);
+    var imageData=canvas.toDataURL('image/png');
+    var win=window.open('','_blank');
+    if(!win){
+      alert('Please allow pop-ups for this site.');
+      return;
+    }
+    win.document.open();
+    win.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Output AA</title><style>html,body{margin:0;background:#eee}body{display:flex;justify-content:center;align-items:flex-start;padding:20px;box-sizing:border-box}img{background:#fff;max-width:calc(100vw - 40px);height:auto}</style></head><body><img src="'+imageData+'" alt="Output AA"></body></html>');
+    win.document.close();
+  }
+  function install(){
+    var button=document.getElementById('output-image-button');
+    if(button) button.addEventListener('click',outputAAImage);
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',install); else install();
+})();
+</script>
